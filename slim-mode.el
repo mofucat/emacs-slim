@@ -1,5 +1,4 @@
 ;;; slim-mode.el --- Major mode for editing Slim files
-
 ;; Copyright (c) 2007, 2008 Nathan Weizenbaum
 ;; Copyright (c) 2009-2013 Daniel Mendler
 ;; Copyright (c) 2012-2014 Bozhidar Batsov
@@ -15,24 +14,22 @@
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
-
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
 ;; Because Slim's indentation schema is similar
 ;; to that of YAML and Python, many indentation-related
 ;; functions are similar to those in yaml-mode and python-mode.
 
 ;; To install, save this on your load path and add the following to
 ;; your .emacs file:
-
 ;;
 ;; (require 'slim-mode)
 
@@ -149,18 +146,18 @@ text nested beneath them.")
      1 font-lock-preprocessor-face)
     ;; ==', =', -
     ("^ *\\(==?'?\\|-\\)"
-      (1 font-lock-preprocessor-face)
-      (,(regexp-opt
-         '("if" "else" "elsif" "for" "in" "do" "unless"
-           "while" "yield" "not" "and" "or")
-         'words) nil nil
-           (0 font-lock-keyword-face)))
+     (1 font-lock-preprocessor-face)
+     (,(regexp-opt
+        '("if" "else" "elsif" "for" "in" "do" "unless"
+          "while" "yield" "not" "and" "or")
+        'words) nil nil
+        (0 font-lock-keyword-face)))
     ;; tag ==, tag =
     ("^ *[\\.#a-z0-9_-]+.*[^<>!=]\\(==?'?\\) +"
      1 font-lock-preprocessor-face)))
 
 (defconst slim-embedded-re "^ *[a-z0-9_-]+:")
-(defconst slim-comment-re  "^ */")
+(defconst slim-comment-re "^ */")
 
 (defun* slim-extend-region ()
   "Extend the font-lock region to encompass embedded engines and comments."
@@ -178,7 +175,6 @@ text nested beneath them.")
       (setq font-lock-end (max font-lock-end (point))))
     (or (/= old-beg font-lock-beg)
         (/= old-end font-lock-end))))
-
 
 ;; Mode setup
 
@@ -271,7 +267,7 @@ character."
 
 (defun slim-forward-sexp (&optional arg)
   "Move forward across one nested expression.
-With `arg', do it that many times.  Negative arg -N means move
+With `arg', do it that many times. Negative arg -N means move
 backward across N balanced expressions.
 
 A sexp in Slim is defined as a line of Slim code as well as any
@@ -291,7 +287,7 @@ lines nested beneath it."
 
 (defun slim-backward-sexp (&optional arg)
   "Move backward across one nested expression.
-With ARG, do it that many times.  Negative arg -N means move
+With ARG, do it that many times. Negative arg -N means move
 forward across N balanced expressions.
 
 A sexp in Slim is defined as a line of Slim code as well as any
@@ -301,6 +297,7 @@ lines nested beneath it."
 
 (defun slim-up-list (&optional arg)
   "Move out of one level of nesting.
+
 With ARG, do this that many times."
   (interactive "p")
   (or arg (setq arg 1))
@@ -314,6 +311,7 @@ With ARG, do this that many times."
 
 (defun slim-down-list (&optional arg)
   "Move down one level of nesting.
+
 With ARG, do this that many times."
   (interactive "p")
   (or arg (setq arg 1))
@@ -338,9 +336,9 @@ last line of the sexp rather than the first non-whitespace
 character of the next line."
   (slim-mark-sexp)
   (let ((pos-of-end-of-line (save-excursion
-                              (goto-char (mark))
-                              (end-of-line)
-                              (point))))
+                               (goto-char (mark))
+                               (end-of-line)
+                               (point))))
     (when (/= pos-of-end-of-line (mark))
       (set-mark
        (save-excursion
@@ -391,20 +389,20 @@ between possible indentations."
         (delete-horizontal-space)
         (unless (eolp)
           (setq next-line-column (save-excursion
-                                   (loop do (forward-line 1)
-                                         while (and (not (eobp)) (looking-at "^[ \t]*$")))
-                                   (+ this-line-column
-                                      (- (current-indentation) current-column))))
+                                    (loop do (forward-line 1)
+                                          while (and (not (eobp)) (looking-at "^[ \t]*$")))
+                                    (+ this-line-column
+                                       (- (current-indentation) current-column))))
           ;; Don't indent an empty line
           (unless (eolp) (indent-to this-line-column)))
-        (forward-line 1)))
-    (move-marker end nil)))
+        (forward-line 1))))
+  (move-marker end nil))
 
 (defun slim-indent-line ()
   "Indent the current line.
 The first time this command is used, the line will be indented to the
-maximum sensible indentation.  Each immediately subsequent usage will
-back-dent the line by `slim-indent-offset' spaces.  On reaching column
+maximum sensible indentation. Each immediately subsequent usage will
+back-dent the line by `slim-indent-offset' spaces. On reaching column
 0, it will cycle back to the maximum sensible indentation."
   (interactive "*")
   (let ((ci (current-indentation))
@@ -416,18 +414,33 @@ back-dent the line by `slim-indent-offset' spaces.  On reaching column
       (if (and (equal last-command this-command) (/= ci 0))
           (indent-to (* (/ (- ci 1) slim-indent-offset) slim-indent-offset))
         (indent-to need)))
-      (if (< (current-column) (current-indentation))
-          (forward-to-indentation 0))))
+    (if (< (current-column) (current-indentation))
+        (forward-to-indentation 0))))
 
 (defun slim-reindent-region-by (n)
   "Add N spaces to the beginning of each line in the region.
-If N is negative, will remove the spaces instead.  Assumes all
-lines in the region have indentation >= that of the first line."
-  (let ((ci (current-indentation))
-        (bound (mark)))
-    (save-excursion
-      (while (re-search-forward (concat "^" (make-string ci ? )) bound t)
-        (replace-match (make-string (max 0 (+ ci n)) ? ) bound nil)))))
+If N is negative, will remove the spaces instead. Assumes all
+lines in the region have indentation >= that of the first line.
+
+NOTE (local patch): `bound' is now a marker instead of a plain
+integer snapshot of `(mark)'. The original implementation used
+`(mark)' directly, which freezes the region's end as a fixed
+buffer position. Because `replace-match' inside the loop changes
+the buffer length on every iteration (shrinking it when N is
+negative, growing it when N is positive), that frozen position
+drifts out of sync with the actual end of the region as the loop
+progresses. When N is negative (as in `slim-uncomment-block'),
+this drift causes the loop to run past the intended region and
+corrupt the indentation of lines *outside* the target block. Using
+a marker lets `bound' track buffer edits automatically, so the
+loop always stops at the true end of the region."
+  (let* ((ci (current-indentation))
+         (bound (copy-marker (mark) t)))
+    (unwind-protect
+        (save-excursion
+          (while (re-search-forward (concat "^" (make-string ci ? )) bound t)
+            (replace-match (make-string (max 0 (+ ci n)) ? ) bound nil)))
+      (set-marker bound nil))))
 
 (defun slim-electric-backspace (arg)
   "Delete characters or back-dent the current line.
@@ -468,5 +481,6 @@ the current line."
 (add-to-list 'auto-mode-alist '("\\.slim\\'" . slim-mode))
 
 ;; Setup/Activation
+
 (provide 'slim-mode)
 ;;; slim-mode.el ends here
