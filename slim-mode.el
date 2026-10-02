@@ -218,6 +218,28 @@ text nested beneath them.")
 
 ;; Useful functions
 
+(defun slim-mark-block-exactly ()
+  "Mark the Slim block starting at the current line, and nothing more.
+Unlike `slim-mark-sexp', the mark never lands on the next line.
+`slim-mark-sexp' leaves it on the first non-whitespace character of the
+following line, so a following sibling (same indentation) was matched by
+`slim-reindent-region-by' and got re-indented as well.  The mark is put
+at the end of the block's last line instead.  Also handles a block whose
+last line has no trailing newline at the end of the buffer."
+  (let ((start (line-beginning-position)))
+    (slim-mark-sexp)
+    (let ((end (save-excursion
+                 (goto-char (mark))
+                 (let ((outside (and (> (line-beginning-position) start)
+                                     (<= (current-indentation)
+                                         (save-excursion (goto-char start)
+                                                         (current-indentation))))))
+                   (if outside
+                       (progn (forward-line -1) (end-of-line))
+                     (end-of-line)))
+                 (point))))
+      (set-mark end))))
+
 (defun slim-comment-block ()
   "Comment the current block of Slim code."
   (interactive)
@@ -228,7 +250,7 @@ text nested beneath them.")
       (newline)
       (indent-to indent)
       (beginning-of-line)
-      (slim-mark-sexp)
+      (slim-mark-block-exactly)
       (slim-reindent-region-by slim-indent-offset))))
 
 (defun slim-uncomment-block ()
